@@ -1,0 +1,19 @@
+Atue como um especialista em N8N.
+Crie uma automação para buscar notícias diárias sobre o universo de jogos e animes em sites ou feeds RSS e enviar um resumo automatizado via WhatsApp.
+
+Público:
+Uso pessoal / Entusiasta de games e cultura pop.
+
+Ferramentas envolvidas:
+RSS Feed (ou Node de requisição HTTP para APIs de notícias), OpenAI (para resumir as manchetes) e Evolution API / WhatsApp Business Cloud (ou outro nó de envio de mensagens no WhatsApp).
+
+Fluxo:
+1. Disparar o fluxo diariamente em um horário específico (Schedule Trigger).
+2. Coletar as últimas notícias de um feed RSS de portais de jogos/animes.
+3. Passar o texto coletado para a IA resumir e formatar as principais manchetes.
+4. Enviar a mensagem formatada para o seu número de WhatsApp.
+
+Regras:
+Ignorar notícias repetidas ou publicadas há mais de 24 horas. Limitar o envio aos 5 principais destaques do dia.
+
+Explique quais nós do N8N devem ser utilizados e a lógica de funcionamento do workflow.

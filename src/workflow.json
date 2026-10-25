@@ -1,0 +1,203 @@
+{
+  "name": "Resumo de Notícias (Games/Animes) via WhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🚀 Como Configurar e Fazer Funcionar\n\n1. **Agendamento (Schedule Trigger):** Defina a frequência com que deseja receber as notícias (padrão: 1x por dia às 09:00).\n2. **RSS Feed:** Substitua a URL do feed no nó `RSS Feed Trigger` pelo site de sua preferência (ex: fontes de games ou animes).\n3. **OpenAI (IA):** Adicione sua credencial da API da OpenAI no nó `IA Resumidora (GPT)`.\n4. **WhatsApp:** Configure suas credenciais no nó de envio do WhatsApp (Evolution API, Z-API ou HTTP Request conforme a solução utilizada).\n5. **Ativar:** Clique no botão **Active** no canto superior direito do N8N para colocar em execução!",
+        "height": 320,
+        "width": 420,
+        "color": 6
+      },
+      "id": "e3a890a1-8d21-4322-9214-7f12e84129b0",
+      "name": "Instruções de Personalização",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "1b3a6288-7e3e-4b7e-a035-7d8a9f3101aa",
+      "name": "Agendamento Diário",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://ge.globo.com/e-sports/rss/ge/"
+      },
+      "id": "8447814b-ef35-43a1-a67f-94a282921a22",
+      "name": "Buscar Notícias (RSS Feed)",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [
+        460,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filtra as notícias publicadas nas últimas 24 horas e limita a 5 itens\nconst agora = new Date();\nconst limiteHoras = 24 * 60 * 60 * 1000;\n\nconst noticiasFiltradas = items.filter(item => {\n  const dataPub = new Date(item.json.pubDate || item.json.isoDate);\n  return (agora - dataPub) <= limiteHoras;\n});\n\nreturn noticiasFiltradas.slice(0, 5);"
+      },
+      "id": "9218ab2a-9e22-4a0d-8302-3c829d10e111",
+      "name": "Filtrar Últimas 24h (Max 5)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-3.5-turbo",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Você é um assistente de notícias sobre games e animes. Resuma os destaques abaixo em no máximo 4 parágrafos curtos, prontos para serem lidos rapidamente no WhatsApp. Use emojis adequados e uma linguagem descontraída."
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.title }} - {{ $json.link }}\nResumo da fonte: {{ $json.contentSnippet || $json.content }}"
+            }
+          ]
+        }
+      },
+      "id": "23c2a9bb-1d88-4c31-92f7-e435985b1a03",
+      "name": "IA Resumidora (OpenAI)",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        900,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "mensagem_whatsapp",
+              "value": "={{ \"🎮 *DESTAQUES DO DIA EM GAMES E ANIMES* 🎮\\n\\n\" + $json.message.content + \"\\n\\n_Enviado via Automação N8N_\" }}"
+            }
+          ]
+        }
+      },
+      "id": "5fa2b801-e112-40a8-bcfd-0f11aa602aa4",
+      "name": "Formatar Mensagem",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        1120,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://SUA_API_WHATSAPP/send-message",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "SEU_TOKEN_AQUI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"5511999999999\",\n  \"text\": \"{{ $json.mensagem_whatsapp }}\"\n}"
+      },
+      "id": "038d17ba-0d52-4a0b-a010-8fa82b5b32e1",
+      "name": "Enviar Notificação (WhatsApp)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1340,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Agendamento Diário": {
+      "main": [
+        [
+          {
+            "node": "Buscar Notícias (RSS Feed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Notícias (RSS Feed)": {
+      "main": [
+        [
+          {
+            "node": "Filtrar Últimas 24h (Max 5)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar Últimas 24h (Max 5)": {
+      "main": [
+        [
+          {
+            "node": "IA Resumidora (OpenAI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IA Resumidora (OpenAI)": {
+      "main": [
+        [
+          {
+            "node": "Formatar Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar Mensagem": {
+      "main": [
+        [
+          {
+            "node": "Enviar Notificação (WhatsApp)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
